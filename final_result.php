@@ -21,7 +21,7 @@
   <br>
     // homeに戻るボタン
     <a href="Home.php" class="button">よくできました！</a>
-
+    // cssコード
     <style>
   body {
     font-family: "Hiragino Kaku Gothic ProN", sans-serif;
