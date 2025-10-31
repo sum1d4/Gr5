@@ -68,10 +68,10 @@
 <h1>かこのもんだい</h1>
 </header>
 <main id="problem-list">
-<!-- JavaScriptで追加される -->
+
 </main>
 <script>
-   // ✅ 仮の問題データ（正解: true / 不正解: false）
+
    const problems = [
      { question: "32+12=49", correct: false },
      { question: "56+14=70", correct: true },
@@ -81,7 +81,7 @@
      { question: "15+13=29", correct: false },
    ];
    const list = document.getElementById("problem-list");
-   // 履歴を自動で追加
+   
    problems.forEach(p => {
      const div = document.createElement("div");
      div.classList.add("problem");
@@ -97,3 +97,4 @@
 </script>
 </body>
 </html>
+

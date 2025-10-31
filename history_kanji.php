@@ -53,7 +53,7 @@
      const buttons = document.querySelectorAll(".switch");
      buttons.forEach(btn => btn.classList.remove("active"));
      if (mode === "tashizan") {
-       buttons[0].classList.add("active");
+       buttons[0].classList.add("active"); 
      } else {
        buttons[1].classList.add("active");
      }
