@@ -9,19 +9,19 @@
   <p class="correct">せいかいのかずは....</p>
 
   <?php
-    // 正解数と総問題数をGETパラメータから取得
+    // 正解数と総問題数をGETパラメータから取得 
     $total_questions = $_GET['total'] ?? 10;
     $is_correct = $_GET['correct'] ?? 0;
   ?>
 
   <div class="score-box">
-    // 正解数と総問題数を表示
+    <!-- 正解数と総問題数 -->
     <?php echo $total_questions . "のうち " . $is_correct . "もん！"; ?>
   </div>
   <br>
-    // homeに戻るボタン
+    <!-- homeに戻るボタン -->
     <a href="Home.php" class="button">よくできました！</a>
-    // cssコード
+    <!-- cssコード -->
     <style>
   body {
     font-family: "Hiragino Kaku Gothic ProN", sans-serif;
