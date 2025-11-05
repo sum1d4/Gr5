@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3分間スコアアタック！計算ゲーム</title>
+    <!-- Tailwind CSS CDNを読み込み -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* フォント設定 */
+        body { font-family: 'Inter', sans-serif; }
+        /* テンキーボタンのアクティブ状態のスタイル */
+        .keypad-button:active {
+            transform: scale(0.95);
+        }
+        /* キーパッドの数字ボタンのスタイル */
+        .number-key {
+            background-color: #f3f4f6; /* gray-100 */
+            color: #1f2937; /* gray-900 */
+        }
+        /* 特殊キーの色 */
+        .back-key {
+            background-color: #f97316; /* orange-500 */
+            color: white;
+        }
+        .submit-key {
+            background-color: #1d4ed8; /* blue-700 */
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="game-container" class="w-full max-w-md bg-white shadow-2xl rounded-xl p-6 transition-all duration-500">
+        
+        <!-- ゲームをやめるボタン (プレイ中に表示) -->
+        <div class="flex justify-end mb-4">
+            <button id="quit-button" class="bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-1 px-3 rounded-md shadow-md transition duration-200 hidden" onclick="quitGame()">
+                ゲームをやめる
+            </button>
+        </div>
+
+        <!-- ヘッダーエリア (スコアとタイマー) -->
+        <div class="flex justify-between items-center mb-6 border-b pb-3">
+            <div class="text-lg font-semibold text-gray-700">
+                スコア: <span id="score" class="text-green-600 text-2xl font-bold ml-1">0</span> てん
+            </div>
+            <div class="text-2xl font-extrabold text-red-600 bg-red-100 px-3 py-1 rounded-lg shadow-inner">
+                のこり: <span id="timer">3:00</span>
+            </div>
+        </div>
+
+        <!-- 問題表示エリア -->
+        <div id="question-area" class="text-center mb-6">
+            <div id="question-box" class="bg-indigo-600 text-white p-4 rounded-lg shadow-xl text-5xl font-extrabold mb-4 h-24 flex items-center justify-center">
+                <!-- 問題がここに入る -->
+                <span id="num1"></span>
+                <span id="operator" class="mx-3"></span>
+                <span id="num2"></span>
+                <span class="ml-3">=</span>
+            </div>
+            
+            <!-- 回答入力ボックス -->
+            <input 
+                type="text" 
+                id="user-answer" 
+                class="w-36 h-16 text-right text-4xl font-bold border-4 border-indigo-300 rounded-lg p-3 mx-auto shadow-md focus:border-indigo-500 transition-colors"
+                readonly
+                maxlength="3"
+                placeholder="0"
+            >
+            <!-- ユーザーフィードバック (正解/不正解) -->
+            <p id="feedback" class="h-6 mt-2 text-sm font-bold"></p>
+        </div>
+
+        <!-- テンキーエリア -->
+        <div id="keypad" class="grid grid-cols-3 gap-3">
+             <!-- 1 2 3 -->
+            <button class="keypad-button number-key rounded-lg p-4 text-2xl font-bold shadow-md" onclick="inputNumber(1)">1</button>
+            <button class="keypad-button number-key rounded-lg p-4 text-2xl font-bold shadow-md" onclick="inputNumber(2)">2</button>
+            <button class="keypad-button number-key rounded-lg p-4 text-2xl font-bold shadow-md" onclick="inputNumber(3)">3</button>
+
+            <!-- 4 5 6 -->
+            <button class="keypad-button number-key rounded-lg p-4 text-2xl font-bold shadow-md" onclick="inputNumber(4)">4</button>
+            <button class="keypad-button number-key rounded-lg p-4 text-2xl font-bold shadow-md" onclick="inputNumber(5)">5</button>
+            <button class="keypad-button number-key rounded-lg p-4 text-2xl font-bold shadow-md" onclick="inputNumber(6)">6</button>
+            
+
+            <!-- 7 8 9 -->
+            <button class="keypad-button number-key rounded-lg p-4 text-2xl font-bold shadow-md" onclick="inputNumber(7)">7</button>
+            <button class="keypad-button number-key rounded-lg p-4 text-2xl font-bold shadow-md" onclick="inputNumber(8)">8</button>
+            <button class="keypad-button number-key rounded-lg p-4 text-2xl font-bold shadow-md" onclick="inputNumber(9)">9</button>
+           
+            <!-- 0 / もどる / こたえあわせ -->
+            <button class="keypad-button number-key rounded-lg p-4 text-2xl font-bold shadow-md" onclick="inputNumber(0)">0</button>
+            <button class="keypad-button back-key rounded-lg p-4 text-xl font-bold shadow-md" onclick="backspace()">もどる</button> 
+            <button id="submit-button" class="keypad-button submit-key rounded-lg p-4 text-xl font-bold shadow-md" onclick="submitAnswer()">こたえあわせ</button> 
+        </div>
+
+    </div>
+
+    <!-- スタート画面/結果画面（モーダルとして機能） -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 transition-opacity duration-300">
+        <div id="modal-content" class="bg-white p-8 rounded-xl w-11/12 max-w-sm text-center shadow-2xl scale-100 transition-transform duration-500">
+            <h2 id="modal-title" class="text-3xl font-bold text-gray-800 mb-4">スコアアタック！</h2>
+            <p id="modal-message" class="text-gray-600 mb-6 text-lg">
+                3分でどれだけせいかいできるかな？
+            </p>
+            
+            <!-- 初期表示用のボタン (JSで制御するためにIDを付与) -->
+            <button id="start-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transition duration-200" onclick="startGame()">
+                ゲームスタート
+            </button>
+            
+        </div>
+    </div>
+
+    <script>
+        // DOM要素の取得
+        const timerDisplay = document.getElementById('timer');
+        const scoreDisplay = document.getElementById('score');
+        const num1Display = document.getElementById('num1');
+        const operatorDisplay = document.getElementById('operator');
+        const num2Display = document.getElementById('num2');
+        const userAnswerInput = document.getElementById('user-answer');
+        const feedbackDisplay = document.getElementById('feedback');
+        const overlay = document.getElementById('overlay');
+        const modalContent = document.getElementById('modal-content');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const startButton = document.getElementById('start-button');
+        const submitButton = document.getElementById('submit-button');
+        const quitButton = document.getElementById('quit-button'); // 新しく追加
+        const MAX_ANSWER_LENGTH = 3;
+
+        // ゲーム状態変数
+        let gameState = 'ready'; // 'ready', 'playing', 'finished'
+        let score = 0;
+        let totalSolved = 0;
+        let timeLeft = 180; // 3分 = 180秒
+        let timerInterval;
+        let correctAnswer;
+
+        /**
+         * 時間表示を mm:ss 形式にフォーマットする
+         * @param {number} totalSeconds - 残り秒数
+         * @returns {string} フォーマットされた文字列
+         */
+        function formatTime(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        /**
+         * タイマーを開始する
+         */
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = formatTime(timeLeft);
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        /**
+         * 1桁の足し算問題をランダムに生成する (1〜9 + 1〜9)
+         */
+        function generateQuestion() {
+            // 1〜9 のランダムな整数を生成
+            const num1 = Math.floor(Math.random() * 99) + 1;
+            const num2 = Math.floor(Math.random() * 99) + 1;
+            const operator = '+';
+
+            correctAnswer = num1 + num2;
+
+            num1Display.textContent = num1;
+            operatorDisplay.textContent = operator;
+            num2Display.textContent = num2;
+            
+            userAnswerInput.value = ''; // 回答欄をクリア
+            feedbackDisplay.textContent = ''; // フィードバックをクリア
+            userAnswerInput.focus(); // 回答欄にフォーカス (readonlyなので意味はないが念のため)
+        }
+
+        /**
+         * ゲームを開始する
+         */
+        function startGame() {
+            if (gameState === 'playing') return;
+
+            // 状態リセット
+            gameState = 'playing';
+            score = 0;
+            totalSolved = 0;
+            timeLeft = 180;
+            
+            // UIリセット
+            scoreDisplay.textContent = score;
+            timerDisplay.textContent = formatTime(timeLeft);
+            
+            // モーダルを非表示にし、ゲーム中断ボタンを表示
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+            quitButton.classList.remove('hidden');
+
+            // 終了時に生成されたボタンコンテナがあれば削除し、#start-buttonを表示に戻す
+            const existingEndButtons = modalContent.querySelector('#end-buttons');
+            if(existingEndButtons) {
+                existingEndButtons.remove();
+                startButton.style.display = 'block';
+            }
+            
+            generateQuestion();
+            startTimer();
+        }
+        
+        /**
+         * ゲームを途中で終了する
+         */
+        function quitGame() {
+            if (gameState !== 'playing') return;
+
+            // タイマーを停止
+            clearInterval(timerInterval);
+            timeLeft = 0; // 結果表示に影響はしないが、タイマーをリセット
+
+            // endGameを呼び出して結果モーダルを表示
+            endGame();
+        }
+
+
+        /**
+         * ゲームを終了し、結果とボタンを表示する
+         */
+        function endGame() {
+            gameState = 'finished';
+            
+            // ゲーム中断ボタンを非表示
+            quitButton.classList.add('hidden');
+
+            modalTitle.textContent = 'ゲームおわり！';
+            modalMessage.innerHTML = `
+                <p class="text-xl font-bold mb-4">3分間おつかれさまでした！</p>
+                <p class="text-left mb-2">♦ といた問題すう: <span class="text-indigo-600 font-extrabold">${totalSolved}</span> もん</p>
+                <p class="text-left mb-4">♦ せいかいしたすう: <span class="text-green-600 font-extrabold text-2xl">${score}</span> てん</p>
+                <p class="text-left text-sm text-gray-500">※ せいとうりつは ${totalSolved > 0 ? ((score / totalSolved) * 100).toFixed(1) : 0}% です</p>
+            `;
+
+            // 初期スタートボタンを非表示にする
+            startButton.style.display = 'none';
+
+            // 終了画面用のボタンコンテナを生成
+            const buttonContainer = document.createElement('div');
+            buttonContainer.id = 'end-buttons';
+            // レスポンシブ対応：モバイルでは縦に並べ、デスクトップでは横に並べる
+            buttonContainer.className = 'flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4 mt-6';
+
+            // 1. もういちど！ボタン
+            const retryButton = document.createElement('button');
+            retryButton.className = 'bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full text-lg shadow-lg transition duration-200 flex-1 w-full sm:w-auto';
+            retryButton.textContent = 'もういちど！';
+            retryButton.onclick = startGame;
+            buttonContainer.appendChild(retryButton);
+
+            // 2. ホームへ戻るボタン (home.phpへ遷移)
+            const homeButton = document.createElement('a');
+            homeButton.href = 'home.php';
+            // aタグの中央揃えを確保
+            homeButton.className = 'bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-full text-lg shadow-lg transition duration-200 flex-1 w-full sm:w-auto text-center';
+            homeButton.textContent = 'ホームへもどる';
+            buttonContainer.appendChild(homeButton);
+
+            modalContent.appendChild(buttonContainer);
+            
+            overlay.classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+
+        // ------------------------- テンキー操作 -------------------------
+
+        /**
+         * 数字を入力する
+         * @param {number} num - 入力された数字
+         */
+        function inputNumber(num) {
+            if (gameState !== 'playing') return;
+
+            const currentAnswer = userAnswerInput.value;
+            if (currentAnswer.length < MAX_ANSWER_LENGTH) {
+                // 最初の桁が '0' ではないことを保証
+                if (currentAnswer === '' && num === 0) return; 
+
+                userAnswerInput.value = currentAnswer + num;
+            }
+        }
+
+        /**
+         * 最後の桁を削除する
+         */
+        function backspace() {
+            if (gameState !== 'playing') return;
+
+            userAnswerInput.value = userAnswerInput.value.slice(0, -1);
+        }
+
+        /**
+         * 回答を提出し、正誤判定を行う
+         */
+        function submitAnswer() {
+            if (gameState !== 'playing') return;
+
+            const userAnswer = userAnswerInput.value;
+            
+            if (userAnswer === '') {
+                // 回答が空の場合はアラートの代わりにフィードバックを表示
+                feedbackDisplay.textContent = 'こたえを入力してください！';
+                feedbackDisplay.className = 'h-6 mt-2 text-sm font-bold text-yellow-600';
+                return;
+            }
+            
+            const userIntAnswer = parseInt(userAnswer, 10);
+            
+            totalSolved++; // といた問題数をカウント
+
+            if (userIntAnswer === correctAnswer) {
+                score++;
+                scoreDisplay.textContent = score;
+                // 正解のフィードバック
+                feedbackDisplay.textContent = 'せいかい！';
+                feedbackDisplay.className = 'h-6 mt-2 text-sm font-bold text-green-600 animate-pulse';
+            } else {
+                // 不正解のフィードバック
+                feedbackDisplay.textContent = `ざんねん... (せいかい: ${correctAnswer})`;
+                feedbackDisplay.className = 'h-6 mt-2 text-sm font-bold text-red-600';
+            }
+
+            // 次の問題をすぐに生成
+            // 視覚的なフィードバックのために少し遅延させる
+            setTimeout(() => {
+                if (gameState === 'playing') {
+                    generateQuestion();
+                }
+            }, 500);
+        }
+
+        // 初期ロード時にスタート画面を表示
+        window.onload = function() {
+            // タイマー表示を初期化
+            timerDisplay.textContent = formatTime(timeLeft); 
+            // 初期状態では問題表示エリアを隠しておく
+            num1Display.textContent = '?';
+            operatorDisplay.textContent = '+';
+            num2Display.textContent = '?';
+        };
+
+    </script>
+
+</body>
+</html>
