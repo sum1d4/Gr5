@@ -2,7 +2,7 @@
 // db_config.php
 
 $host = '127.0.0.1';
-$dbname = 'learn_db';  // ←データベース名
+$dbname = 'learn+';  // ←データベース名
 $username = 'root';
 $password = '';         // XAMPPでは初期設定で空
 
@@ -13,3 +13,4 @@ try {
     die("データベース接続失敗: " . $e->getMessage());
 }
 ?>
+
