@@ -20,30 +20,36 @@ if (isset($_GET['subject'])) {
 $back_url = "subject_select.php";
 
 // ホームボタンのリンク先
-$home_url = "index.php"; 
+$home_url = "home.php"; 
 
 
 // 🎯 修正ロジック: ふつうモードの遷移先を決定 🎯
 $normal_mode_action = "question.php"; // デフォルトの遷移先
+// 🚨 スコアアタックの遷移先変数を定義 🚨
+$score_attack_action = "score_attack.php"; // デフォルトの遷移先
 
 // 'yomi' または 'kaki' が選択されている場合
 if ($selected_subject === 'yomi' || $selected_subject === 'kaki') {
     // 学年と教科に応じた遷移先を設定
     if ($selected_grade === '1') {
         if ($selected_subject === 'yomi') {
-            $normal_mode_action = "qs_1read.php"; // 1年よみ
+            $normal_mode_action = "qs_1read.php"; // 1年よみ (ふつう)
+            $score_attack_action = "1read_attack.php"; // 🚨 1年よみ (スコアアタック)
         } elseif ($selected_subject === 'kaki') {
-            $normal_mode_action = "qs_1kaki.php"; // 1年かき
+            $normal_mode_action = "qs_1kaki.php"; // 1年かき (ふつう)
+            $score_attack_action = "1kaki_attack.php"; // 🚨 1年かき (スコアアタック)
         }
     } elseif ($selected_grade === '2') {
         if ($selected_subject === 'yomi') {
-            $normal_mode_action = "qs_2read.php"; // 2年よみ
+            $normal_mode_action = "qs_2read.php"; // 2年よみ (ふつう)
+            $score_attack_action = "2read_attack.php"; // 🚨 2年よみ (スコアアタック)
         } elseif ($selected_subject === 'kaki') {
-            $normal_mode_action = "qs_2kaki.php"; // 2年かき
+            $normal_mode_action = "qs_2kaki.php"; // 2年かき (ふつう)
+            $score_attack_action = "2kaki_attack.php"; // 🚨 2年かき (スコアアタック)
         }
     }
 }
-// その他の教科 (tashizan/hikizanなど) の場合は question.php のまま
+// その他の教科 (tashizan/hikizanなど) の場合は question.php / score_attack.php のまま
 
 // 共通のクエリパラメータ文字列を生成 (HTMLでは使わないが念のため残す)
 $query_params = "grade={$selected_grade}&subject={$selected_subject}";
@@ -55,6 +61,7 @@ $query_params = "grade={$selected_grade}&subject={$selected_subject}";
     <meta charset="UTF-8">
     <title>モード選択 (<?php echo "{$selected_grade}年 - {$selected_subject}"; ?>)</title>
     <style>
+        /* (CSSコードは省略) */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -221,7 +228,7 @@ $query_params = "grade={$selected_grade}&subject={$selected_subject}";
         </button>
     </form>
 
-    <form action="score_attack.php" method="POST">
+    <form action="<?php echo $score_attack_action; ?>" method="POST">
         <input type="hidden" name="grade" value="<?php echo $selected_grade; ?>">
         <input type="hidden" name="subject" value="<?php echo $selected_subject; ?>">
         <button type="submit" class="mode-button score-attack">
@@ -249,8 +256,6 @@ $query_params = "grade={$selected_grade}&subject={$selected_subject}";
         normalCountInput.value = this.value;
     });
 
-    // 💡 補足: 他のモードも目標数 (count) を必要とする場合は、
-    // 同様の hidden フィールドとその更新処理を各フォームに追加してください。
 </script>
 
 </body>
