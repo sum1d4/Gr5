@@ -19,7 +19,7 @@ if (isset($_GET['subject'])) {
 $back_url = "subject_select.php";
 
 // ホームボタンのリンク先
-$home_url = "index.php"; 
+$home_url = "home.php"; 
 
 // 共通のクエリパラメータ文字列を生成
 $query_params = "grade={$selected_grade}&subject={$selected_subject}";
@@ -30,6 +30,7 @@ $query_params = "grade={$selected_grade}&subject={$selected_subject}";
     <meta charset="UTF-8">
     <title>モード選択 | Learn+</title>
     <style>
+        /* (スタイルの変更はありません) */
         body {
             /* 統一された背景 */
             background: linear-gradient(to bottom, #b3e5fc, #81d4fa); 
@@ -191,7 +192,7 @@ $query_params = "grade={$selected_grade}&subject={$selected_subject}";
             <span class="icon">🎯</span>もくひょう
             <select class="target-select" id="target_count_select">
                 <?php 
-                // PHPループで10から990まで10刻みでオプションを生成
+                // PHPループで10から100まで10刻みでオプションを生成
                 for ($i = 10; $i <= 100; $i += 10) {
                     // デフォルト値20を設定
                     $selected = ($i == 20) ? 'selected' : '';
@@ -213,12 +214,13 @@ $query_params = "grade={$selected_grade}&subject={$selected_subject}";
         <input type="hidden" name="grade" value="<?php echo $selected_grade; ?>">
         <input type="hidden" name="subject" value="<?php echo $selected_subject; ?>">
         <input type="hidden" name="mode" value="normal">
-        <input type="hidden" name="count" id="normal_count_input" value="20"> <button type="submit" class="mode-button normal">
+        <input type="hidden" name="count" id="normal_count_input" value="20"> 
+        <button type="submit" class="mode-button normal">
             ふつうモード
         </button>
     </form>
     
-    <form action="score_attack.php" method="POST">
+    <form action="score_attack.php" method="POST" id="score_attack_form">
         <input type="hidden" name="grade" value="<?php echo $selected_grade; ?>">
         <input type="hidden" name="subject" value="<?php echo $selected_subject; ?>">
         <button type="submit" class="mode-button score-attack">
@@ -240,7 +242,9 @@ $query_params = "grade={$selected_grade}&subject={$selected_subject}";
 
     const targetSelect = document.getElementById('target_count_select');
     const normalCountInput = document.getElementById('normal_count_input');
-    const normalForm = document.getElementById('normal_form'); // ふつうモードのフォームを取得
+    const normalForm = document.getElementById('normal_form'); 
+    // 🚨 スコアアタックフォームを取得
+    const scoreAttackForm = document.getElementById('score_attack_form'); 
 
     // 1. 目標数のセレクトボックスの値が変わったら、hiddenフィールドの値を更新するロジック
     normalCountInput.value = targetSelect.value; 
@@ -250,30 +254,40 @@ $query_params = "grade={$selected_grade}&subject={$selected_subject}";
     });
 
 
-    // 2. 🚨 ふつうモードの遷移先を動的に変更するロジック
-    function updateNormalFormAction() {
-        let actionUrl = 'question.php'; // デフォルトの遷移先
-
+    // 2. 🚨 ふつうモードとスコアアタックの遷移先を動的に変更するロジック
+    function updateFormActions() {
+        let normalActionUrl = 'question.php'; // ふつうモードのデフォルト
+        let attackActionUrl = 'score_attack.php'; // スコアアタックのデフォルト
+        
+        
         if (selectedGrade === '1') {
             if (selectedSubject === 'tashizan') {
-                actionUrl = 'math_question_1tasi.php';
+                normalActionUrl = 'math_question_1tasi.php';
+                attackActionUrl = '1tasi_attack.php';
             } else if (selectedSubject === 'hikizan') {
-                actionUrl = 'math_question_1hiki.php';
+                normalActionUrl = 'math_question_1hiki.php';
+                // 🚨 ユーザーの指示に基づくファイル名: 2tasi_attack.php
+                attackActionUrl = '1hiki_attack.php'; // 1年ひきざんのスコアアタック
             }
         } else if (selectedGrade === '2') {
             if (selectedSubject === 'tashizan') {
-                actionUrl = 'math_question_2tasi.php';
+                normalActionUrl = 'math_question_2tasi.php';
+                // 🚨 ユーザーの指示に基づくファイル名: 2tasi_attack.php
+                attackActionUrl = '2tasi_attack.php'; // 2年たしざんのスコアアタック
             } else if (selectedSubject === 'hikizan') {
-                actionUrl = 'math_question_2hiki.php';
+                normalActionUrl = 'math_question_2hiki.php';
+                // 🚨 ユーザーの指示に基づくファイル名: 2tasi_attack.php
+                attackActionUrl = '2hiki_attack.php'; // 2年ひきざんのスコアアタック
             }
         }
         
         // フォームの action 属性を更新
-        normalForm.setAttribute('action', actionUrl);
+        normalForm.setAttribute('action', normalActionUrl);
+        scoreAttackForm.setAttribute('action', attackActionUrl); // 🚨 スコアアタックフォームも更新
     }
 
     // ページロード時に遷移先を設定
-    updateNormalFormAction();
+    updateFormActions();
 
 </script>
 
