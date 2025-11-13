@@ -79,11 +79,11 @@
   <h1>きょうかをせんたく</h1>
 
   <!-- 教科ボタン -->
-  <form action="kanji.php" method="get">
+  <form action="history_kanji.php" method="get">
     <button type="submit" class="subject-btn kanji">📖 かんじ ✏️</button>
   </form>
 
-  <form action="keisan.php" method="get">
+  <form action="history_math.php" method="get">
     <button type="submit" class="subject-btn keisan">➕ けいさん ➖</button>
   </form>
 </div>
