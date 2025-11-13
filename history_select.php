@@ -73,7 +73,7 @@
 <body>
 
 <!-- 戻るボタン -->
-<a href="index.php" class="back-btn">←</a>
+<a href="home.php" class="back-btn">←</a>
 
 <div class="container">
   <h1>きょうかをせんたく</h1>
