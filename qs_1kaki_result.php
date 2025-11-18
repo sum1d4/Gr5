@@ -47,7 +47,7 @@ try {
 
     $stmt->execute([
         ":session_id"  => $_SESSION["learning_session_id"],  // すでに読み問題で使用済み
-        ":subject"     => "kaki",
+        ":subject"     => "1kaki",
         ":problem_id"  => $question_id,
         ":user_id"     => $_SESSION["user_id"],
         ":user_answer" => $user_answer,
