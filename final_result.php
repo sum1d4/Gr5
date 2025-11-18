@@ -1,33 +1,48 @@
 <?php
 session_start();
+require_once "db_config.php";
 
 /* -------------------------
-   書き問題のセッションをリセット
-   ------------------------- */
+   GETパラメータの取得
+------------------------- */
+$total_questions = $_GET['total'] ?? 10;
+$correct         = $_GET['correct'] ?? 0;
+
+/* -------------------------
+   1) learning_session を更新
+------------------------- */
+if (!empty($_SESSION["learning_session_id"])) {
+
+    $sql = "UPDATE learning_session
+            SET correct_count = :correct,
+                end_time = NOW(),
+                total_questions = :total
+            WHERE session_id = :sid";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ":correct" => $correct,
+        ":total"   => $total_questions,
+        ":sid"     => $_SESSION["learning_session_id"],
+    ]);
+}
+
+/* -------------------------
+   2) セッションリセット
+      ※ learning_session_id は最後に消す！
+------------------------- */
 unset($_SESSION["kaki_current_q"]);
 unset($_SESSION["kaki_used_questions"]);
 unset($_SESSION["kaki_correct_count"]);
 unset($_SESSION["kaki_correct_answer"]);
 
-/* -------------------------
-   読み問題のセッションをリセット
-   ------------------------- */
 unset($_SESSION["yomi_current_q"]);
 unset($_SESSION["yomi_used_questions"]);
 unset($_SESSION["yomi_correct_count"]);
 unset($_SESSION["yomi_correct_answer"]);
 
-/* -------------------------
-   学習セッションID（履歴記録用）もリセット
-   ------------------------- */
-unset($_SESSION["learning_session_id"]);
+unset($_SESSION["learning_session_id"]); // ← 最後に消す！
 
-/* user_id はログイン用なので残す（破棄しない）
---------------------------------------- */
-
-// GETパラメータ取得（正解数など）
-$total_questions = $_GET['total'] ?? 10;
-$is_correct      = $_GET['correct'] ?? 0;
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -102,7 +117,7 @@ $is_correct      = $_GET['correct'] ?? 0;
   <p class="correct">せいかいのかずは....</p>
 
   <div class="score-box">
-    <?php echo $total_questions . "のうち " . $is_correct . "もん！"; ?>
+    <?= $total_questions . "のうち " . $correct . "もん！"; ?>
   </div>
 
   <br>
