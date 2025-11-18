@@ -1,28 +1,41 @@
+<?php
+session_start();
+
+/* -------------------------
+   書き問題のセッションをリセット
+   ------------------------- */
+unset($_SESSION["kaki_current_q"]);
+unset($_SESSION["kaki_used_questions"]);
+unset($_SESSION["kaki_correct_count"]);
+unset($_SESSION["kaki_correct_answer"]);
+
+/* -------------------------
+   読み問題のセッションをリセット
+   ------------------------- */
+unset($_SESSION["yomi_current_q"]);
+unset($_SESSION["yomi_used_questions"]);
+unset($_SESSION["yomi_correct_count"]);
+unset($_SESSION["yomi_correct_answer"]);
+
+/* -------------------------
+   学習セッションID（履歴記録用）もリセット
+   ------------------------- */
+unset($_SESSION["learning_session_id"]);
+
+/* user_id はログイン用なので残す（破棄しない）
+--------------------------------------- */
+
+// GETパラメータ取得（正解数など）
+$total_questions = $_GET['total'] ?? 10;
+$is_correct      = $_GET['correct'] ?? 0;
+?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <title>最終画面</title>
 
-<div class="container">
-  <h1>おわりー！</h1>
-  <p class="correct">せいかいのかずは....</p>
-
-  <?php
-    // 正解数と総問題数をGETパラメータから取得 
-    $total_questions = $_GET['total'] ?? 10;
-    $is_correct = $_GET['correct'] ?? 0;
-  ?>
-
-  <div class="score-box">
-    <!-- 正解数と総問題数 -->
-    <?php echo $total_questions . "のうち " . $is_correct . "もん！"; ?>
-  </div>
-  <br>
-    <!-- homeに戻るボタン -->
-    <a href="Home.php" class="button">よくできました！</a>
-    <!-- cssコード -->
-    <style>
+<style>
   body {
     font-family: "Hiragino Kaku Gothic ProN", sans-serif;
     text-align: center;
@@ -74,16 +87,28 @@
     box-shadow: 0 3px 0 #d9a400;
     cursor: pointer;
     transition: 0.2s;
+    text-decoration: none;
   }
 
   .button:hover {
     transform: scale(1.05);
   }
-
 </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>おわりー！</h1>
+  <p class="correct">せいかいのかずは....</p>
+
+  <div class="score-box">
+    <?php echo $total_questions . "のうち " . $is_correct . "もん！"; ?>
+  </div>
+
+  <br>
+
+  <a href="index.php" class="button">よくできました！</a>
 </div>
 
 </body>
 </html>
-
-
