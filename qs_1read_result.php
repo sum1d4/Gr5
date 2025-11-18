@@ -18,7 +18,7 @@ $user_answer = trim($_POST["answer"]);    // ユーザー入力
 // ★ answer_record 用
 $session_id = $_SESSION["learning_session_id"];
 $user_id    = $_SESSION["user_id"];
-$subject    = "yomi";
+$subject    = "1yomi";
 
 // ---------------------------------------------------
 // 【A】セッション初期化（初回アクセス時）
