@@ -1,123 +1,272 @@
 <?php
-// 1. 問題データの設定 (現在は仮データを使用)
-$correct_answer = "新"; 
-$choices = ["新", "親"]; 
-
-// 2. 問題情報をセッションに保存
+// ==========================================
+// qs_1read_result.php（10問進行・正誤判定・DB保存対応）
+// ==========================================
 session_start();
-$_SESSION['correct_answer'] = $correct_answer;
-?>
+require_once "db_config.php";
 
+// ------------------
+// POSTチェック
+// ------------------
+if (!isset($_POST["question_id"]) || !isset($_POST["answer"])) {
+    die("不正なアクセスです。");
+}
+
+$question_id = $_POST["question_id"];
+$user_answer = trim($_POST["answer"]);    // ユーザー入力
+
+// ★ answer_record 用
+$session_id = $_SESSION["learning_session_id"];
+$user_id    = $_SESSION["user_id"];
+$subject    = "yomi";
+
+// ---------------------------------------------------
+// 【A】セッション初期化（初回アクセス時）
+// ---------------------------------------------------
+if (!isset($_SESSION["current_q"])) {
+    $_SESSION["current_q"] = 1;
+    $_SESSION["correct_count"] = 0;
+}
+
+
+// ================================
+// ① 問題の漢字を取得（kanji）
+// ================================
+$sql1 = "SELECT question_text FROM kanji WHERE question_id = :qid LIMIT 1";
+$stmt1 = $pdo->prepare($sql1);
+$stmt1->bindValue(":qid", $question_id);
+$stmt1->execute();
+$row = $stmt1->fetch(PDO::FETCH_ASSOC);
+
+$question_kanji = $row ? $row["question_text"] : "？";
+
+
+// ================================
+// ② すべての正しい「読み」を取得（kanji_reading）
+// ================================
+$sql2 = "SELECT reading_answer FROM kanji_reading WHERE question_id = :qid";
+$stmt2 = $pdo->prepare($sql2);
+$stmt2->bindValue(":qid", $question_id);
+$stmt2->execute();
+$correct_answers = $stmt2->fetchAll(PDO::FETCH_COLUMN);
+
+if (!$correct_answers) {
+    die("正解の読みが見つかりません。(ID:$question_id)");
+}
+
+
+// ================================
+// ③ 正誤判定（複数読み対応）
+// ================================
+$is_correct = in_array($user_answer, $correct_answers);
+
+
+// ---------------------------------------------------
+// 【B】正解時はカウント＋1
+// ---------------------------------------------------
+if ($is_correct) {
+    $_SESSION["correct_count"]++;
+}
+
+
+// ---------------------------------------------------
+// ★【C】answer_record に保存（target_id なし版）
+// ---------------------------------------------------
+$sql_rec = "
+    INSERT INTO answer_record 
+    (session_id, subject, problem_id, user_id, user_answer, is_correct)
+    VALUES (:sid, :sub, :pid, :uid, :ua, :isc)
+";
+$stmt_rec = $pdo->prepare($sql_rec);
+$stmt_rec->bindValue(":sid", $session_id);
+$stmt_rec->bindValue(":sub", $subject);
+$stmt_rec->bindValue(":pid", $question_id);
+$stmt_rec->bindValue(":uid", $user_id);
+$stmt_rec->bindValue(":ua", $user_answer);
+$stmt_rec->bindValue(":isc", $is_correct ? 1 : 0, PDO::PARAM_INT);
+$stmt_rec->execute();
+
+
+// ---------------------------------------------------
+// 【D】問題番号を進める
+// ---------------------------------------------------
+$_SESSION["current_q"]++;
+
+
+// ---------------------------------------------------
+// 【E】10問終わったら final_result.php へ
+// ---------------------------------------------------
+if ($_SESSION["current_q"] > 10) {
+
+    $total = 10;
+    $correct = $_SESSION["correct_count"];
+
+    // ★ learning_session の正解数を更新
+    $sql_update = "
+        UPDATE learning_session
+        SET correct_count = :cc, end_time = NOW()
+        WHERE session_id = :sid
+    ";
+    $stmt_up = $pdo->prepare($sql_update);
+    $stmt_up->bindValue(":cc", $correct, PDO::PARAM_INT);
+    $stmt_up->bindValue(":sid", $session_id, PDO::PARAM_INT);
+    $stmt_up->execute();
+
+    // セッション破棄（リセット）
+    session_destroy();
+
+    header("Location: final_result.php?total=$total&correct=$correct");
+    exit;
+}
+
+
+// ================================
+// ④ 表示用テキスト
+// ================================
+$result_message = $is_correct ? "せいかい！" : "ざんねん…";
+$result_emoji   = $is_correct ? "🎉" : "🤔";
+$result_class   = $is_correct ? "correct" : "incorrect";
+
+$correct_display = $is_correct
+    ? "よくできました！"
+    : "せいかいは「" . implode(" / ", $correct_answers) . "」でした";
+
+// 次のページ
+$next_button_link = "qs_1read.php";
+$quit_button_link = "subject_select.php";
+?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>漢字選択問題</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        .quiz-container { 
-            max-width: 500px; 
-            margin: 50px auto; 
-            padding: 40px 20px 20px; 
-            border: 1px solid #ccc; 
-            position: relative; 
-        }
-        /* 戻るボタン */
-        .back-button { 
-            position: absolute; 
-            top: 10px;        
-            left: 10px;       
-            font-size: 24px; 
-            padding: 5px; 
-            border: 1px solid #00f; 
-            border-radius: 5px; 
-            text-decoration: none; 
-            background-color: white; 
-            color: #00f;
-            z-index: 10; 
-        }
-        /* 問題ボックス（黒板をイメージ） */
-        .question-box { 
-            background-color: #046307; 
-            color: white; 
-            padding: 50px 20px; 
-            margin-bottom: 20px; 
-            border-radius: 10px; 
-        }
-        /* 疑問符のエリア */
-        .placeholder { background-color: white; width: 100px; height: 100px; line-height: 100px; font-size: 40px; border-radius: 10px; display: inline-block; margin-bottom: 15px; }
-        /* 読み仮名 */
-        .reading-text { font-size: 30px; margin-bottom: 30px; }
-        
-        /* 選択肢コンテナ */
-        .choices-container { 
-            display: block; 
-            margin-top: 20px;
-        }
-        
-        /* 個別の選択肢コンテナ: 上下のマージンを大きくして縦長の印象を強調 */
-        .choice-item {
-            display: inline-block; 
-            margin: 40px 15px; /* 上下 40px、左右 15px */
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>けっか</title>
 
-        /* ボタン自体 */
-        .choice-button { 
-            background-color: white; 
-            border: 2px solid #ccc; 
-            padding: 20px 30px; 
-            font-size: 30px; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            transition: background-color 0.2s;
-            display: block; 
-        }
-        .choice-button:hover {
-             background-color: #f0f0f0;
-        }
-    </style>
+<style>
+/* デザインそのまま */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #f5f5f5;
+    font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 390px;
+    background-color: #fff;
+    padding: 30px 20px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.result-box {
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    font-size: 36px;
+    font-weight: bold;
+    color: white;
+}
+
+.result-box.correct { background-color: #4CAF50; }
+.result-box.incorrect { background-color: #F44336; }
+
+.result-emoji {
+    font-size: 60px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.info-container {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #fafafa;
+}
+
+.question-info {
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.answer-info {
+    font-size: 20px;
+    font-weight: 500;
+    color: #333;
+}
+
+.correct-display {
+    font-size: 22px;
+    font-weight: bold;
+    color: #1a73e8;
+    margin-top: 15px;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.action-button {
+    padding: 15px 25px;
+    font-size: 20px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    color: white;
+}
+
+.next-button { background-color: #1a73e8; }
+.menu-button { background-color: #ccc; color: #333; }
+
+</style>
 </head>
 <body>
 
-<div class="quiz-container">
-    <a href="subject_select.php" class="back-button">←</a>
+<div class="container">
 
-    <div class="question-box">
-        <div class="placeholder">?</div>
-        <div class="reading-text"><span style="font-size: 1.5em; color: yellow;">あたら</span></div>
+    <div class="result-box <?php echo $result_class; ?>">
+        <span class="result-emoji"><?php echo $result_emoji; ?></span>
+        <?php echo $result_message; ?>
     </div>
-    
-    <h2><?php echo htmlspecialchars("ただしいのはどっち？"); ?></h2>
 
-    <form action="qs_1kaki_result.php" method="POST" class="choices-container">
-        
-        <?php foreach ($choices as $index => $choice): ?>
-            <div class="choice-item">
-                <input type="radio" id="choice_<?php echo $index; ?>" name="selected_answer" value="<?php echo htmlspecialchars($choice); ?>" style="display: none;" required>
-                
-                <label for="choice_<?php echo $index; ?>" class="choice-button">
-                    <?php echo htmlspecialchars($choice); ?>
-                </label>
-            </div>
-        <?php endforeach; ?>
-        
-        <input type="submit" value="決定" style="display: none;">
-    </form>
+    <div class="info-container">
+
+        <div class="question-info">
+            もんだい: <?php echo htmlspecialchars($question_kanji); ?> の読み
+        </div>
+
+        <div class="answer-info">
+            あなたのこたえ: <?php echo htmlspecialchars($user_answer); ?>
+        </div>
+
+        <div class="correct-display">
+            <?php echo htmlspecialchars($correct_display); ?>
+        </div>
+
+    </div>
+
+    <div class="button-group">
+        <a href="<?php echo $next_button_link; ?>" class="action-button next-button">
+            つぎのもんだいへ
+        </a>
+        <a href="<?php echo $quit_button_link; ?>" class="action-button menu-button">
+            やめる
+        </a>
+    </div>
+
 </div>
-
-<script>
-    // 選択肢（ラベル）をクリックしたらフォームを送信する
-    document.querySelectorAll('.choice-button').forEach(button => {
-        button.addEventListener('click', function() {
-            // 対応するラジオボタンを選択状態にする
-            const radioId = this.getAttribute('for');
-            document.getElementById(radioId).checked = true;
-            
-            // フォームを送信
-            this.closest('form').submit();
-        });
-    });
-</script>
 
 </body>
 </html>
