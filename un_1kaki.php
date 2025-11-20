@@ -199,7 +199,7 @@ $_SESSION["kaki_correct_answer"] = $correct_answer;
 
     <h2>ただしいのはどっち？</h2>
 
-    <form action="qs_1kaki_result.php" method="POST" class="choices-container">
+    <form action="un_1kaki_result.php" method="POST" class="choices-container">
 
         <input type="hidden" name="question_id" value="<?= $question_id ?>">
 
