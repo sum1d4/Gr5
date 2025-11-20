@@ -19,7 +19,7 @@ if (!isset($_SESSION["learning_session_id"])) {
 
     $sql = "INSERT INTO learning_session 
             (user_id, subject, category, total_questions, correct_count, start_time)
-            VALUES (:uid, '2yomi', 'normal', :tq, 0, NOW())";
+            VALUES (:uid, 'yomi2', 'normal', :tq, 0, NOW())";
 
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(":uid", $_SESSION["user_id"], PDO::PARAM_INT);
@@ -202,13 +202,14 @@ input[type="text"] {
     border-radius: 8px;
     cursor: pointer;
 }
+
 </style>
 </head>
 <body>
 
 <div class="container">
     <div class="appbar">
-        <a href="subject_select.php" class="back-icon">←</a>
+        <a href="reset_quiz_session.php" class="back-btn">←</a>
     </div>
 
     <div class="board">
