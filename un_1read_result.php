@@ -132,7 +132,7 @@ $correct_display = $is_correct
     : "せいかいは「" . implode(" / ", $correct_answers) . "」でした";
 
 // 次のページ
-$next_button_link = "qs_1read.php";
+$next_button_link = "un_1read.php";
 $quit_button_link = "subject_select.php";
 ?>
 <!DOCTYPE html>
