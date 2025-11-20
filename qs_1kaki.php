@@ -3,6 +3,14 @@ session_start();
 require_once "db_config.php";
 
 // --------------------------------------------
+// 【ログインチェック】
+// --------------------------------------------
+if (!isset($_SESSION["user_id"])) {
+    header("Location: Rogin.php");
+    exit;
+}
+
+// --------------------------------------------
 // 1) 学習セッションがなければ作成（読みと同じ動作）
 // --------------------------------------------
 if (!isset($_SESSION["learning_session_id"])) {
@@ -12,7 +20,7 @@ if (!isset($_SESSION["learning_session_id"])) {
 
     $sql = "INSERT INTO learning_session 
             (user_id, subject, category, total_questions, correct_count, start_time)
-            VALUES (:user_id, '1kaki', 'normal', :tq, 0, NOW())";
+            VALUES (:user_id, 'kaki', 'normal', :tq, 0, NOW())";
 
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(":user_id", $_SESSION["user_id"], PDO::PARAM_INT);
