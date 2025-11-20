@@ -278,7 +278,7 @@ input[type="text"]{
         </div>
     </div>
 
-    <form method="post" class="input-container" action="qs_2read_result.php">
+    <form method="post" class="input-container" action="un_2read_result.php">
         <input type="text" name="answer" placeholder="にゅうりょくしてね" required>
         <br>
 
