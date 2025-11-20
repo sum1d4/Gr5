@@ -2,6 +2,14 @@
 session_start();
 require_once "db_config.php";
 
+// --------------------------------------------
+// 【ログインチェック】
+// --------------------------------------------
+if (!isset($_SESSION["user_id"])) {
+    header("Location: Rogin.php");
+    exit;
+}
+
 // ===========================================================
 // ★ 1) 初回アクセス時 learning_session を自動作成
 // ===========================================================
@@ -12,7 +20,7 @@ if (!isset($_SESSION["learning_session_id"])) {
 
     $sql = "INSERT INTO learning_session 
             (user_id, subject, category, total_questions, correct_count, start_time)
-            VALUES (:uid, '1yomi', 'normal', :tq, 0, NOW())";
+            VALUES (:uid, 'yomi', 'normal', :tq, 0, NOW())";
 
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(":uid", $_SESSION["user_id"], PDO::PARAM_INT);
@@ -38,9 +46,6 @@ if (!isset($_SESSION["current_q"])) {
 if ($_SESSION["current_q"] > 10) {
     $total = 10;
     $correct = $_SESSION["correct_count"];
-
-    // セッション破棄（任意）
-    session_destroy();
 
     header("Location: final_result.php?total={$total}&correct={$correct}");
     exit;
