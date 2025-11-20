@@ -29,7 +29,7 @@ if (!empty($_SESSION["learning_session_id"])) {
 
 /* -------------------------
    2) セッションリセット
-      ※ learning_session_id は最後に消す！
+      ※ learning_session_id は最後に消す
 ------------------------- */
 unset($_SESSION["kaki_current_q"]);
 unset($_SESSION["kaki_used_questions"]);
@@ -41,7 +41,7 @@ unset($_SESSION["yomi_used_questions"]);
 unset($_SESSION["yomi_correct_count"]);
 unset($_SESSION["yomi_correct_answer"]);
 
-unset($_SESSION["learning_session_id"]); // ← 最後に消す！
+unset($_SESSION["learning_session_id"]); // ← 最後に消す
 
 ?>
 <!DOCTYPE html>
