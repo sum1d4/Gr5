@@ -71,7 +71,7 @@ if (!isset($_SESSION["failed_1read_list"])) {
     $stmt2 = $pdo->prepare($sql2);
     $stmt2->execute([
         ":uid"  => $user_id,
-        ":subj" => $subject,  // ★ここが「yomi1」
+        ":subj" => $subject,  
         ":tq"   => $total_q
     ]);
 
@@ -272,3 +272,4 @@ input[type="text"] {
 
 </body>
 </html>
+
