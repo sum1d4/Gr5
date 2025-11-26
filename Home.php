@@ -73,7 +73,7 @@
     <body>
     <div class="title">Learn+</div>
     <div class="button-box">
-    <button class="btn" onclick="location.href='login.php'">ログイン</button>
+    <button class="btn" onclick="location.href='Rogin.php'">ログイン</button>
     <button class="btn" onclick="location.href='home.php'">ゲスト</button>
     </div>
     <div class="terms">
