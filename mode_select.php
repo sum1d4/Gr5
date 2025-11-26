@@ -36,24 +36,24 @@ if ($selected_subject === 'yomi' || $selected_subject === 'kaki') {
         if ($selected_subject === 'yomi') {
             $normal_mode_action = "qs_1read.php";       // 1年よみ (ふつう)
             $unanswered_mode_action = "un_1read.php";   // 1年よみ (未出題)
-            $low_accuracy_action = "failed_1read.php";  // ★ 1年よみ (まちがえた)
+            $low_accuracy_action = "failed_1read.php";  // 1年よみ (まちがえた)
             $score_attack_action = "1read_attack.php";  // 1年よみ (スコアアタック)
         } elseif ($selected_subject === 'kaki') {
             $normal_mode_action = "qs_1kaki.php";       // 1年かき (ふつう)
             $unanswered_mode_action = "un_1kaki.php";   // 1年かき (未出題)
-            $low_accuracy_action = "failed_1kaki.php";  // ★ 1年かき (まちがえた)
+            $low_accuracy_action = "failed_1kaki.php";  // 1年かき (まちがえた)
             $score_attack_action = "1kaki_attack.php";  // 1年かき (スコアアタック)
         }
     } elseif ($selected_grade === '2') {
         if ($selected_subject === 'yomi') {
             $normal_mode_action = "qs_2read.php";       // 2年よみ (ふつう)
             $unanswered_mode_action = "un_2read.php";   // 2年よみ (未出題)
-            $low_accuracy_action = "failed_2read.php";  // ★ 2年よみ (まちがえた)
+            $low_accuracy_action = "failed_2read.php";  // 2年よみ (まちがえた)
             $score_attack_action = "2read_attack.php";  // 2年よみ (スコアアタック)
         } elseif ($selected_subject === 'kaki') {
             $normal_mode_action = "qs_2kaki.php";       // 2年かき (ふつう)
             $unanswered_mode_action = "un_2kaki.php";   // 2年かき (未出題)
-            $low_accuracy_action = "failed_2kaki.php";  // ★ 2年かき (まちがえた)
+            $low_accuracy_action = "failed_2kaki.php";  // 2年かき (まちがえた)
             $score_attack_action = "2kaki_attack.php";  // 2年かき (スコアアタック)
         }
     }
@@ -86,98 +86,135 @@ $query_params = "grade={$selected_grade}&subject={$selected_subject}";
             border-radius: 5px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .mode-button {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            font-size: 18px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            color: white;
-            font-weight: bold;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-            transition: background-color 0.3s;
-        }
-        .normal { background-color: #72a8e8; }
-        .unanswered { background-color: #e85a5a; }
-        .low-accuracy { background-color: #ff9933; }
-        .score-attack { background-color: #ffcc00; color: #333; }
-        .home { background-color: #aaaaaa; } 
-
-        /* 戻るボタンのスタイル */
-        .back-button-container {
-            text-align: left;
-            margin-bottom: 10px;
-        }
-        .back-button {
-            display: inline-flex;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #aaaaaa;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            border: none;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-            text-decoration: none;
-        }
-
-        /* 目標・現在数表示エリアのスタイル */
-        .target-info-cloud {
-            background: #fff;
-            border: 2px solid #ccc;
-            /* 雲のような形 */
-            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-            margin: 20px auto;
-            padding: 20px;
-            width: 80%;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .target-line, .current-line {
-            font-size: 16px;
-            margin: 5px 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* リストボックス (select) のスタイル */
-        .target-select {
-            font-size: 16px;
-            font-weight: bold;
-            border: 1px solid #e85a5a; 
-            background-color: #ffcc99; 
-            color: #e85a5a;
-            padding: 3px;
-            margin: 0 5px;
-            border-radius: 3px;
-            -webkit-appearance: menulist;
-            -moz-appearance: menulist;
-            appearance: menulist;
-            text-align: center;
-            width: 70px;
-            height: 30px;
-        }
-        
-        .current-number {
-            border: 1px solid #72a8e8;
-            background-color: #e6f0ff;
-            padding: 3px 5px;
-            border-radius: 3px;
-            margin: 0 5px;
-            color: #72a8e8;
-            font-weight: bold;
-        }
-        .icon {
-            margin-right: 5px;
-        }
+   /* ================================
+       🎨 統一ボタンデザイン
+    ================================= */
+    .mode-button {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        margin: 15px 0;
+        font-size: 1.3rem;
+        cursor: pointer;
+        border: none;
+        border-radius: 30px;
+        color: white;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        transition: background-color 0.3s, transform 0.1s;
+    }
+ 
+    .mode-button:active {
+        transform: translateY(2px);
+    }
+ 
+    /* ふつう（青） */
+    .normal {
+        background: linear-gradient(to bottom, #64b5f6, #1976d2);
+    }
+    .normal:hover {
+        background-color: #42a5f5;
+    }
+ 
+    /* やったことない（赤） */
+    .unanswered {
+        background: linear-gradient(to bottom, #ff867c, #e53935);
+    }
+    .unanswered:hover {
+        background-color: #d32f2f;
+    }
+ 
+    /* にがて（オレンジ） */
+    .low-accuracy {
+        background: linear-gradient(to bottom, #ffb74d, #f57c00);
+    }
+    .low-accuracy:hover {
+        background-color: #ef6c00;
+    }
+ 
+    /* スコアアタック（黄） */
+    .score-attack {
+        background: linear-gradient(to bottom, #ffeb3b, #fbc02d);
+        color: #333;
+    }
+    .score-attack:hover {
+        background-color: #ffcc00;
+    }
+ 
+    /* ホーム（グレー） */
+    .home {
+        background: linear-gradient(to bottom, #bdbdbd, #616161);
+    }
+    .home:hover {
+        background-color: #757575;
+    }
+ 
+    /* 戻るボタン */
+    .back-button-container {
+        text-align: left;
+        margin-bottom: 15px;
+    }
+ 
+    .back-button {
+        display: inline-flex;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #666;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        border: none;
+        text-decoration: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+ 
+    /* 雲デザイン用 */
+    .target-info-cloud {
+        background: #fff;
+        border: 2px solid #ccc;
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        margin: 20px auto;
+        padding: 20px;
+        width: 85%;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+ 
+    .target-line, .current-line {
+        font-size: 16px;
+        margin: 5px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+ 
+    .target-select {
+        font-size: 16px;
+        font-weight: bold;
+        border: 1px solid #e85a5a;
+        background-color: #ffcc99;
+        color: #e85a5a;
+        padding: 3px;
+        margin: 0 5px;
+        border-radius: 5px;
+        width: 70px;
+        height: 30px;
+        text-align: center;
+    }
+ 
+    .current-number {
+        border: 1px solid #72a8e8;
+        background-color: #e6f0ff;
+        padding: 3px 5px;
+        border-radius: 5px;
+        color: #72a8e8;
+        font-weight: bold;
+    }    
+    </style>
+ 
     </style>
 </head>
 <body>
@@ -225,7 +262,7 @@ $query_params = "grade={$selected_grade}&subject={$selected_subject}";
         <input type="hidden" name="grade" value="<?php echo $selected_grade; ?>">
         <input type="hidden" name="subject" value="<?php echo $selected_subject; ?>">
         <button type="submit" class="mode-button unanswered">
-            やったことないもんざい
+            やったことないもんだい
         </button>
     </form>
     
