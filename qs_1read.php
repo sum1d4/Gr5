@@ -113,12 +113,11 @@ html, body {
     padding: 0;
     height: 100%;
     background-color: #fff;
-    font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    font-family: "Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
-
 .container {
     width: 100%;
     max-width: 390px;
@@ -127,7 +126,6 @@ html, body {
     flex-direction: column;
     align-items: center;
 }
-
 .appbar {
     width: 100%;
     height: 48px;
@@ -136,13 +134,11 @@ html, body {
     padding-left: 12px;
     background-color: #fff;
 }
-
 .back-icon {
     font-size: 28px;
     color: #007aff;
     text-decoration: none;
 }
-
 .board {
     margin-top: 100px;
     width: 220px;
@@ -154,13 +150,11 @@ html, body {
     justify-content: center;
     align-items: center;
 }
-
 .kanji {
     font-size: 60px;
     color: white;
     font-weight: bold;
 }
-
 .yellow-boxes {
     position: absolute;
     right: 14px;
@@ -168,7 +162,6 @@ html, body {
     flex-direction: column;
     gap: 12px;
 }
-
 .yellow-box {
     width: 24px;
     height: 24px;
@@ -177,6 +170,9 @@ html, body {
 
 .input-container {
     margin-top: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 input[type="text"] {
@@ -203,7 +199,7 @@ input[type="text"] {
 
 <div class="container">
     <div class="appbar">
-        <a href="subject_select.php" class="back-icon">←</a>
+        <a href="reset_quiz_session.php" class="back-icon">←</a>
     </div>
 
     <div class="board">

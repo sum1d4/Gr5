@@ -151,7 +151,7 @@ $_SESSION["kaki2_correct_answer"] = $correct_answer;
 <body>
 
 <div class="quiz-container">
-    <a href="subject_select.php" class="back-button">←</a>
+    <a href="reset_quiz_session.php" class="back-button">←</a>
 
     <div class="question-box">
         <div class="reading-text">
