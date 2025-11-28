@@ -1,43 +1,67 @@
 <?php
-// POSTリクエストから 'grade' と 'subject' を取得 (mode_select_keisan.phpからのPOSTを想定)
-$selected_grade = '';
-$selected_subject = '';
+// 1. データベース設定ファイルの読み込み
+require_once 'db_config.php';
 
-// POSTでデータを受け取る
-if (isset($_POST['grade'])) {
-    $selected_grade = htmlspecialchars($_POST['grade']);
-}
-if (isset($_POST['subject'])) {
-    $selected_subject = htmlspecialchars($_POST['subject']);
+// ----------------------------------------------------
+
+// 🚨【修正箇所】学年と教科を固定値に設定
+$selected_grade = 2;
+$selected_subject = 'yomi';
+
+// ----------------------------------------------------
+// 🏆 データベースからハイスコアを取得する処理
+// ----------------------------------------------------
+$high_scores = []; // 配列を初期化
+
+try {
+    // 学年(1)と教科(kaki)、カテゴリー('score')で絞り込み
+    // スコアの高い順 > タイムの早い順 で上位3つを取得
+    $sql = "SELECT score 
+            FROM score_attack 
+            WHERE target_age = :grade 
+              AND subject = :subject 
+              AND category = 'score'
+            ORDER BY score DESC, total_time ASC 
+            LIMIT 3";
+    
+    $stmt = $pdo->prepare($sql);
+    
+    // 固定値をバインド
+    $stmt->bindValue(':grade', $selected_grade, PDO::PARAM_INT);
+    $stmt->bindValue(':subject', $selected_subject, PDO::PARAM_STR);
+    
+    $stmt->execute();
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // データベースの結果を表示用配列に格納
+    foreach ($results as $row) {
+        $high_scores[] = ['score' => $row['score'], 'label' => 'もん'];
+    }
+
+    // データが1件もない場合のダミー表示（空のままにしてHTML側で制御してもOK）
+    // ここではHTML側のロジックに合わせて空のままにしておきます
+
+} catch (PDOException $e) {
+    // エラー時はログに記録し、エラー表示用のダミーを入れる
+    error_log("Score Fetch Error: " . $e->getMessage());
+    $high_scores[] = ['score' => 'Error', 'label' => ''];
 }
 
-// 戻るボタンのリンク先を mode_select_keisan.php に設定
-// ※学年と教科を渡して戻る（モード選択画面に戻る）
-$back_url = "mode_select_keisan.php?grade={$selected_grade}&subject={$selected_subject}";
+// ----------------------------------------------------
+
+// 戻るボタンのリンク先（固定値を持って戻る）
+$back_url = "mode_select.php?grade={$selected_grade}&subject={$selected_subject}";
 
 // ホームボタンのリンク先
 $home_url = "index.php"; 
 
-// 🚨 【修正ロジック】スタートボタンの遷移先を固定 🚨
-// ユーザーの要望により、遷移先を score_question1hiki.php に固定します。
+// スタートボタンの遷移先
 $start_page = 'score_2read.php'; 
-
 
 // 遷移先のページに grade と subject をクエリパラメータで渡す
 $query_params = "?grade={$selected_grade}&subject={$selected_subject}";
 $start_page_with_params = $start_page . $query_params;
 
-
-// PHPで仮のハイスコアデータを定義します。
-// 実際のアプリケーションでは、データベース（Firestoreなど）から取得します。
-$high_scores = [
-    ['score' => 30, 'label' => 'もん'], // 1位
-    ['score' => 28, 'label' => 'もん'], // 2位
-    ['score' => 23, 'label' => 'もん'], // 3位
-];
-
-// 画面遷移先のダミーページ
-$home_page = 'index.php'; 
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -46,7 +70,6 @@ $home_page = 'index.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>スコアアタック</title>
     <style>
-        /* ... CSSコードは変更なし ... */
         /* ----------------------- グローバルスタイル ----------------------- */
         body {
             font-family: sans-serif;
@@ -149,12 +172,19 @@ $home_page = 'index.php';
             font-size: 1.4em;
             padding: 5px 0;
             color: #333;
+            border-bottom: 1px dashed #b2dfdb; /* 区切り線を追加 */
+        }
+        
+        .score-list li:last-child {
+            border-bottom: none;
         }
 
         .score-list span.rank {
             font-weight: bold;
             color: #004d40;
             margin-right: 10px;
+            display: inline-block;
+            width: 25px; /* ランクの幅を揃える */
         }
 
         .score-list span.value {
@@ -248,13 +278,21 @@ $home_page = 'index.php';
         <div class="score-record">
             <h2>いまのきろく</h2>
             <ul class="score-list">
-                <?php foreach ($high_scores as $index => $score_data): ?>
-                    <li>
-                        <span class="rank"><?php echo $index + 1; ?>.</span>
-                        <span class="value"><?php echo htmlspecialchars($score_data['score']); ?></span>
-                        <?php echo htmlspecialchars($score_data['label']); ?>
-                    </li>
-                <?php endforeach; ?>
+                <?php if (empty($high_scores)): ?>
+                    <li style="text-align:center; font-size:1em; color:#777;">まだ きろく は ないよ</li>
+                <?php else: ?>
+                    <?php foreach ($high_scores as $index => $score_data): ?>
+                        <li>
+                            <span class="rank"><?php echo $index + 1; ?>.</span>
+                            <?php if ($score_data['score'] === '-'): ?>
+                                <span class="value" style="color:#999;"><?php echo htmlspecialchars($score_data['score']); ?></span>
+                            <?php else: ?>
+                                <span class="value"><?php echo htmlspecialchars($score_data['score']); ?></span>
+                            <?php endif; ?>
+                            <span style="font-size:0.8em;"><?php echo htmlspecialchars($score_data['label']); ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </ul>
         </div>
         
