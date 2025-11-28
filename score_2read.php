@@ -41,6 +41,11 @@
             align-items: center;
             justify-content: center;
         }
+        
+        /* モーダル制御 */
+        .pointer-events-none {
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
@@ -73,7 +78,7 @@
                 type="text" 
                 id="user-answer" 
                 class="w-full h-16 text-center text-4xl font-bold border-4 border-emerald-300 rounded-lg p-3 mx-auto shadow-md focus:border-emerald-500 transition-colors"
-                maxlength="4" 
+                maxlength="6" 
                 placeholder="よみを入力"
                 autocomplete="off"
             >
@@ -103,7 +108,7 @@
     </div>
 
     <script>
-        // --- 漢字問題リスト（ご提供いただいた新しいデータ） ---
+        // --- 漢字問題リスト ---
         const RAW_KANJI_DATA = [
             { kanji: '引', yomi: 'いん' }, { kanji: '引', yomi: 'ひ' },
             { kanji: '羽', yomi: 'う' }, { kanji: '羽', yomi: 'は' }, { kanji: '羽', yomi: 'はね' },
@@ -405,6 +410,10 @@
             // ゲーム中断ボタンを非表示
             quitButton.classList.add('hidden');
 
+            // プレイ時間の計算 (180秒 - 残り時間)
+            const totalTimeSpent = 180 - timeLeft; 
+            const actualTimeSpent = Math.max(0, totalTimeSpent);
+
             modalTitle.textContent = 'ゲームおわり！';
             modalMessage.innerHTML = `
                 <p class="text-xl font-bold mb-4">おつかれさまでした！</p>
@@ -417,9 +426,15 @@
             startButton.style.display = 'none';
 
             // 終了画面用のボタンコンテナを生成
-            const buttonContainer = document.createElement('div');
-            buttonContainer.id = 'end-buttons';
-            buttonContainer.className = 'flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4 mt-6';
+            let buttonContainer = document.getElementById('end-buttons');
+            if (!buttonContainer) {
+                buttonContainer = document.createElement('div');
+                buttonContainer.id = 'end-buttons';
+                buttonContainer.className = 'flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4 mt-6';
+                modalContent.appendChild(buttonContainer);
+            } else {
+                buttonContainer.innerHTML = ''; 
+            }
 
             // 1. もういちど！ボタン
             const retryButton = document.createElement('button');
@@ -428,16 +443,17 @@
             retryButton.onclick = startGame;
             buttonContainer.appendChild(retryButton);
 
-            // 2. ホームへ戻るボタン (home.phpへ遷移)
+            // 2. ホームへ戻るボタン (index.phpへ遷移)
             const homeButton = document.createElement('a');
-            homeButton.href = 'home.php'; 
+            homeButton.href = 'index.php'; 
             homeButton.className = 'bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-full text-lg shadow-lg transition duration-200 flex-1 w-full sm:w-auto text-center';
             homeButton.textContent = 'ホームへもどる';
             buttonContainer.appendChild(homeButton);
-
-            modalContent.appendChild(buttonContainer);
             
             overlay.classList.remove('opacity-0', 'pointer-events-none');
+
+            // ⭐ スコアを保存 (JSON形式)
+            saveScore(score, actualTimeSpent);
         }
 
 
@@ -493,6 +509,50 @@
                     generateQuestion();
                 }
             }, 500);
+        }
+
+        // ------------------------- データ送信 -------------------------
+
+        /**
+         * スコアをサーバーサイドのPHPスクリプトに送信する (JSON形式)
+         * @param {number} finalScore 最終スコア（正解数）
+         * @param {number} totalTimeSpent プレイ時間（秒）
+         */
+        function saveScore(finalScore, totalTimeSpent) {
+            
+            // PHP側が要求するJSONデータ構造に合わせる
+            const postData = {
+                score: finalScore,
+                total_time: totalTimeSpent 
+            };
+
+            // POSTリクエストの実行
+            fetch('save_score2kaki.php', {
+                method: 'POST',
+                // Content-Type ヘッダーを 'application/json' に設定
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                // データをJSON文字列に変換して送信
+                body: JSON.stringify(postData),
+            })
+            .then(response => {
+                // PHP側でJSONを返している場合を想定
+                if (response.ok) {
+                    return response.json(); 
+                } else {
+                    // エラー時もJSONレスポンスを解析するよう試みる
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || 'スコア保存エラー: ' + response.status);
+                    });
+                }
+            })
+            .then(data => {
+                console.log('スコア保存成功:', data);
+            })
+            .catch(error => {
+                console.error('スコア保存失敗:', error);
+            });
         }
 
         // 初期ロード時にスタート画面を表示
