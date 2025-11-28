@@ -125,8 +125,6 @@
 
     <script>
         // --- 漢字書き取り問題リスト (ご提供いただいたデータから抽出・修正) ---
-        // データはJavaScriptで扱えるよう、()から[]に修正されています。
-        // データ構造の解釈: [3]:読み本体, [4]:送り仮名, [5]:正解漢字, [6]:ダミー漢字
         const RAW_PROBLEMS = [
             ['KJ001R', '1', '読み', '一', null, '', ''],
             ['KJ001W', '1', '書き', 'いち', '', '一', '二'],
@@ -294,15 +292,13 @@
         const KANJI_WRITING_PROBLEMS = [];
         RAW_PROBLEMS.forEach(row => {
             if (row[2] === '書き') {
-                // ★修正点1: 読み仮名の結合順序を修正 (読み本体 + 送り仮名)
                 const yomi = (row[3] || '') + (row[4] || ''); 
                 
                 KANJI_WRITING_PROBLEMS.push({
                     id: row[0],
                     yomi: yomi, 
-                    // ★修正点2: データ構造のインデックスを正しく指定
-                    correct: row[5],   // インデックス [5] を正解漢字とする
-                    distractor: row[6] // インデックス [6] をダミー漢字とする
+                    correct: row[5], 
+                    distractor: row[6]
                 });
             }
         });
@@ -325,6 +321,7 @@
         let timeLeft = 180; // 3分 = 180秒
         let timerInterval;
         let currentCorrectAnswer = ''; 
+        let startTime; // ★追加：ゲーム開始時刻を保持
 
         /**
          * 配列をシャッフルするユーティリティ関数
@@ -378,7 +375,6 @@
             currentCorrectAnswer = problem.correct;
             
             // 選択肢の配列を作成し、シャッフルする
-            // ★修正点3: 正解とダミーが空文字でないことを確認して配列に加える
             let choices = [];
             if (problem.correct) {
                 choices.push(problem.correct);
@@ -387,7 +383,6 @@
                 choices.push(problem.distractor);
             }
 
-            // 選択肢が2つ未満の場合、ゲーム続行不能なのでエラー表示
             if (choices.length < 2) {
                 console.error("問題データ不備: 選択肢が2つ未満です。", problem);
                 readingDisplay.textContent = 'データエラー（問題をスキップします）';
@@ -401,7 +396,7 @@
             readingDisplay.textContent = reading;
             
             // 選択肢ボタンを生成
-            choicesContainer.innerHTML = ''; // 選択肢をクリア
+            choicesContainer.innerHTML = ''; 
             choices.forEach(choice => {
                 const button = document.createElement('button');
                 button.className = 'choice-button';
@@ -410,7 +405,7 @@
                 choicesContainer.appendChild(button);
             });
             
-            feedbackDisplay.textContent = ''; // フィードバックをクリア
+            feedbackDisplay.textContent = ''; 
         }
 
         /**
@@ -424,6 +419,7 @@
             score = 0;
             totalSolved = 0;
             timeLeft = 180;
+            startTime = Date.now(); // ★追加：開始時刻を記録
             
             // UIリセット
             scoreDisplay.textContent = score;
@@ -433,7 +429,6 @@
             overlay.classList.add('opacity-0', 'pointer-events-none');
             quitButton.classList.remove('hidden');
 
-            // 終了時に生成されたボタンコンテナを削除
             const existingEndButtons = modalContent.querySelector('#end-buttons');
             if(existingEndButtons) {
                 existingEndButtons.remove();
@@ -463,6 +458,9 @@
             gameState = 'finished';
             clearInterval(timerInterval);
             
+            // ★追加：プレイ時間の計算
+            const totalPlayedTime = Math.floor((Date.now() - startTime) / 1000); 
+
             // ゲーム中断ボタンを非表示
             quitButton.classList.add('hidden');
 
@@ -475,6 +473,7 @@
                 <p class="text-left mb-2">♦ といたかず: <span class="text-indigo-600 font-extrabold">${totalSolved}</span> もん</p>
                 <p class="text-left mb-4">♦ せいかいしたかず: <span class="text-green-600 font-extrabold text-2xl">${score}</span> てん</p>
                 <p class="text-left text-sm text-gray-500">※ せいとうりつは ${totalSolved > 0 ? ((score / totalSolved) * 100).toFixed(1) : 0}% です</p>
+                <p class="text-left text-sm text-gray-500">※ プレイ時間: ${formatTime(totalPlayedTime)}</p>
             `;
 
             // 初期スタートボタンを非表示にする
@@ -500,12 +499,15 @@
 
             // 2. ホームへ戻るボタン (aタグとして仮に設定)
             const homeButton = document.createElement('a');
-            homeButton.href = 'home.php'; 
+            homeButton.href = 'index.php'; 
             homeButton.className = 'bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-full text-lg shadow-lg transition duration-200 flex-1 w-full sm:w-auto text-center';
             homeButton.textContent = 'ホームへもどる';
             buttonContainer.appendChild(homeButton);
             
             overlay.classList.remove('opacity-0', 'pointer-events-none');
+            
+            // ★追加: スコアをデータベースに送信
+            saveScore(score, totalPlayedTime);
         }
 
         // ------------------------- 入力操作 -------------------------
@@ -516,9 +518,9 @@
         function submitAnswer(selectedKanji) {
             if (gameState !== 'playing') return;
 
-            totalSolved++; // といた問題数をカウント
+            totalSolved++; 
             
-            const isCorrect = (selectedKanji === currentCorrectAnswer); // ★要件通り、正しい答えのみ正解に
+            const isCorrect = (selectedKanji === currentCorrectAnswer); 
 
             // 選択肢を非アクティブ化 (連打防止)
             choicesContainer.querySelectorAll('.choice-button').forEach(button => {
@@ -547,12 +549,48 @@
             }, 700);
         }
 
+        // ------------------------- データ送信 -------------------------
+        
+        /**
+         * 終了結果をPHPにPOST送信する
+         */
+        function saveScore(finalScore, playedTime) {
+            const dataToSend = {
+                score: finalScore,
+                total_time: playedTime,
+                // user_id はサーバー側のPHPでセッションなどから取得するのが理想
+            };
+
+            fetch('save_score.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dataToSend),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    console.log('スコア登録成功:', data.message);
+                } else {
+                    console.error('スコア登録失敗:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('通信エラー:', error);
+            });
+        }
+
         // 初期ロード時にスタート画面を表示
         window.onload = function() {
             timerDisplay.textContent = formatTime(timeLeft); 
             readingDisplay.textContent = 'スタートを待っています';
             
-            // 念のため、初期状態のオーバーレイを表示
             overlay.classList.remove('opacity-0', 'pointer-events-none');
         };
 
