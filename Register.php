@@ -1,11 +1,10 @@
 <?php
 // Register.php
 
-// 1. セッションを開始 (エラーメッセージ表示のため)
+// 1. セッションを開始
 session_start();
 
 // 2. データベース接続設定ファイルを読み込む
-// (このファイルと同じ場所に db_config.php があることを確認してください)
 require_once 'db_config.php'; 
 
 $error_message = '';
@@ -23,29 +22,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_message = 'がくねん は「1」か「2」を入力してください。';
     } else {
         
-        // ★ 4. データベースへの挿入処理
         try {
-            // 4a. ユーザーIDを生成 (簡易的なランダム文字列)
-            $user_id = substr(bin2hex(random_bytes(4)), 0, 8);
+            // ★ 4. 重複チェック (ここを追加しました)
+            // 「同じ名前」かつ「同じ学年」のデータが既に存在するか数える
+            $sql_check = "SELECT COUNT(*) FROM user WHERE user_name = ? AND user_grade = ?";
+            $stmt_check = $pdo->prepare($sql_check);
+            $stmt_check->execute([$user_name, $user_grade]);
+            $count = $stmt_check->fetchColumn(); // 件数を取得
 
-            // 4b. SQL文を準備 (プリペアドステートメント)
-            $sql_insert = "INSERT INTO user (user_id, user_name, user_grade) VALUES (?, ?, ?)";
-            $stmt_insert = $pdo->prepare($sql_insert);
-            
-            // 4c. SQL文を実行
-            $stmt_insert->execute([$user_id, $user_name, $user_grade]);
-            
-            $success_message = 'とうろく が かんりょうしました！ ログインがめんに もどってください。';
+            if ($count > 0) {
+                // すでに存在する場合
+                $error_message = 'そのニックネームと がくねん は すでに とうろくされています。べつの ニックネームに してください。';
+            } else {
+                // 存在しない場合、登録処理へ進む
+
+                // 5a. ユーザーIDを生成 (簡易的なランダム文字列)
+                $user_id = substr(bin2hex(random_bytes(4)), 0, 8);
+
+                // 5b. SQL文を準備 (プリペアドステートメント)
+                $sql_insert = "INSERT INTO user (user_id, user_name, user_grade) VALUES (?, ?, ?)";
+                $stmt_insert = $pdo->prepare($sql_insert);
+                
+                // 5c. SQL文を実行
+                $stmt_insert->execute([$user_id, $user_name, $user_grade]);
+                
+                $success_message = 'とうろく が かんりょうしました！ ログインがめんに もどってください。';
+            }
 
         } catch (PDOException $e) {
-            // 4d. SQLエラーが発生した場合の処理
-            if ($e->getCode() == 23000) { // 一意制約違反 (ユーザー名が重複した場合)
-                // (user_name に UNIQUE 制約を追加した場合に機能します)
-                $error_message = 'そのニックネームは すでに つかわれています。';
-            } else {
-                error_log('登録エラー: ' . $e->getMessage());
-                $error_message = 'データベース エラーです。とうろく できませんでした。';
-            }
+            // SQLエラーが発生した場合の処理
+            error_log('登録エラー: ' . $e->getMessage());
+            $error_message = 'データベース エラーです。とうろく できませんでした。';
         }
     }
 }
@@ -56,7 +63,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>あたらしく とうろく | Learn+</title>
-    <!-- Google Fonts (Inter) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
@@ -183,7 +189,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="register-container">
         <h1 class="title">あたらしく とうろく</h1>
 
-        <!-- エラーまたは成功メッセージの表示 -->
         <?php if ($error_message): ?>
             <p class="message error"><?php echo htmlspecialchars($error_message, ENT_QUOTES, 'UTF-8'); ?></p>
         <?php endif; ?>
@@ -191,22 +196,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p class="message success"><?php echo htmlspecialchars($success_message, ENT_QUOTES, 'UTF-8'); ?></p>
         <?php endif; ?>
 
-        <!-- フォームの送信先を自分自身 (Register.php) に設定 -->
         <form action="Register.php" method="POST">
             
-            <!-- ニックネーム入力 (縦並び) -->
             <div class="form-group">
                 <label for="user_name" class="label">ニックネーム</label>
-                <input type="text" id="user_name" name="user_name" placeholder="なまえ" class="text-input" required>
+                <input type="text" id="user_name" name="user_name" placeholder="なまえ" class="text-input" required value="<?php echo htmlspecialchars($user_name ?? '', ENT_QUOTES, 'UTF-8'); ?>">
             </div>
             
-            <!-- 学年入力 (縦並び) -->
             <div class="form-group">
                 <label for="user_grade" class="label">がくねん</label>
-                <input type="text" id="user_grade" name="user_grade" placeholder="1 または 2" class="text-input" required>
+                <input type="text" id="user_grade" name="user_grade" placeholder="1 または 2" class="text-input" required value="<?php echo htmlspecialchars($user_grade ?? '', ENT_QUOTES, 'UTF-8'); ?>">
             </div>
 
-            <!-- 登録ボタンはフォーム内に配置 -->
             <button type="submit" class="button register-button">とうろく する</button>
         </form>
         
