@@ -16,14 +16,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_grade = $_POST['user_grade'] ?? '';
 
     // 3. バリデーション
-    if (empty($user_name) || empty($user_grade)) {
+    // ★追加: ニックネームの文字数チェック (サーバー側)
+    if (mb_strlen($user_name, 'UTF-8') > 10) {
+        $error_message = 'ニックネームは10文字以内で入力してください。';
+    // ★追加: 学年の文字数チェック (サーバー側)
+    } elseif (mb_strlen($user_grade, 'UTF-8') > 1) {
+        $error_message = 'がくねん は1文字で入力してください。';
+    } elseif (empty($user_name) || empty($user_grade)) {
         $error_message = 'ニックネームと がくねん の両方を入力してください。';
     } elseif (!in_array($user_grade, ['1', '2'])) {
         $error_message = 'がくねん は「1」か「2」を入力してください。';
     } else {
         
         try {
-            // ★ 4. 重複チェック (ここを追加しました)
+            // ★ 4. 重複チェック 
             // 「同じ名前」かつ「同じ学年」のデータが既に存在するか数える
             $sql_check = "SELECT COUNT(*) FROM user WHERE user_name = ? AND user_grade = ?";
             $stmt_check = $pdo->prepare($sql_check);
@@ -66,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
+        /* CSSの変更はありません */
         /* --- 基本設定 --- */
         html, body {
             height: 100%;
@@ -200,12 +207,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             <div class="form-group">
                 <label for="user_name" class="label">ニックネーム</label>
-                <input type="text" id="user_name" name="user_name" placeholder="なまえ" class="text-input" required value="<?php echo htmlspecialchars($user_name ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="text" id="user_name" name="user_name" placeholder="なまえ" class="text-input" required maxlength="10" value="<?php echo htmlspecialchars($user_name ?? '', ENT_QUOTES, 'UTF-8'); ?>">
             </div>
             
             <div class="form-group">
                 <label for="user_grade" class="label">がくねん</label>
-                <input type="text" id="user_grade" name="user_grade" placeholder="1 または 2" class="text-input" required value="<?php echo htmlspecialchars($user_grade ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                <input type="text" id="user_grade" name="user_grade" placeholder="1 または 2" class="text-input" required maxlength="1" value="<?php echo htmlspecialchars($user_grade ?? '', ENT_QUOTES, 'UTF-8'); ?>">
             </div>
 
             <button type="submit" class="button register-button">とうろく する</button>
