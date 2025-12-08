@@ -2,7 +2,19 @@
 session_start();
 require_once "db_config.php"; // DB接続ファイル
 
-// 1. ログインチェック
+/* =====================================================
+   0. ログアウト処理
+   ===================================================== */
+if (isset($_GET["logout"])) {
+    session_unset();
+    session_destroy();
+    header("Location: Rogin.php");
+    exit;
+}
+
+/* =====================================================
+   1. ログインチェック
+   ===================================================== */
 if (!isset($_SESSION["user_id"])) {
     header("Location: Rogin.php"); 
     exit;
@@ -10,17 +22,20 @@ if (!isset($_SESSION["user_id"])) {
 
 $user_id = $_SESSION["user_id"];
 
-// 2. データベースから現在の目標値を取得
+/* =====================================================
+   2. DBから目標値を取得
+   ===================================================== */
 $sql_target = "SELECT target_questions FROM target WHERE user_id = :uid LIMIT 1";
 $stmt_t = $pdo->prepare($sql_target);
 $stmt_t->bindValue(":uid", $user_id, PDO::PARAM_INT);
 $stmt_t->execute();
 $row_target = $stmt_t->fetch(PDO::FETCH_ASSOC);
 
-// 設定がなければデフォルト値（20問）
 $current_target = $row_target ? $row_target["target_questions"] : 20;
 
-// 3. 今日の解答数をカウントする
+/* =====================================================
+   3. 今日の解答数を取得
+   ===================================================== */
 $sql_count = "
     SELECT COUNT(*) 
     FROM answer_record
@@ -33,7 +48,7 @@ $sql_count = "
 $stmt_c = $pdo->prepare($sql_count);
 $stmt_c->bindValue(":uid", $user_id, PDO::PARAM_INT);
 $stmt_c->execute();
-$today_count = $stmt_c->fetchColumn(); 
+$today_count = $stmt_c->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -41,6 +56,7 @@ $today_count = $stmt_c->fetchColumn();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>ホーム | Learn+</title>
+
     <style>
         body{
             background: linear-gradient(to bottom, #b3e5fc, #81d4fa);
@@ -52,7 +68,31 @@ $today_count = $stmt_c->fetchColumn();
             height: 100vh;
             margin: 0;
             padding-top: 60px;
+            position: relative;
         }
+
+        /* ===========================
+           ✨ 右上のログアウトボタン
+           =========================== */
+        .logout-link {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            font-size: 0.9rem;
+            color: #444;
+            opacity: 0.7;
+            text-decoration: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: 0.2s;
+            background: rgba(255,255,255,0.6);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        }
+        .logout-link:hover {
+            opacity: 1;
+            background: rgba(255,255,255,0.9);
+        }
+
         .cloud-box{
             background: white;
             border-radius: 50px;
@@ -64,16 +104,18 @@ $today_count = $stmt_c->fetchColumn();
             line-height: 1.8;
             margin-bottom: 20px;
         }
+
         select{
             font-size: 1rem;
             padding:2px 5px;
             border-radius: 5px;
             border: 1px solid #aaa;
         }
+
         .btn{
             display: block;
             width: 220px;
-            text-align:  center;
+            text-align: center;
             padding: 14px;
             border:none;
             border-radius: 20px;
@@ -95,41 +137,41 @@ $today_count = $stmt_c->fetchColumn();
         .record-btn:hover {
             background: #ab47bc;
         }
+
         @media(max-width: 600px){
-            .cloud-box{
-                font-size: 1rem;
-                padding: 10px 20px;
-            }
-            .btn{
-                width: 180px;
-                font-size: 1rem;
-                padding: 12px;
-            }
+            .logout-link { font-size: 0.8rem; right: 10px; }
+            .cloud-box{ font-size: 1rem; padding: 10px 20px; }
+            .btn{ width: 180px; font-size: 1rem; padding: 12px; }
         }
     </style>
 </head>
 <body>
+
+    <!-- 🔓 ログアウトリンク（画面右上） -->
+    <a href="index.php?logout=1" class="logout-link">ログアウト</a>
+
     <div class="cloud-box">
         <form action="update_target.php" method="post" style="display:inline;">
             🎯もくひょう
-            <select name="target_questions" onchange="this.form.submit()" style="font-size: 1.1rem; padding:5px; border-radius: 8px; border: 2px solid #81d4fa; cursor: pointer;">
+            <select name="target_questions" onchange="this.form.submit()"
+                style="font-size: 1.1rem; padding:5px; border-radius: 8px; border: 2px solid #81d4fa; cursor: pointer;">
                 <?php 
-                // ★ 10〜100までループで表示 ★
                 for ($i = 10; $i <= 100; $i += 10) {
                     $selected = ($i == $current_target) ? 'selected' : '';
                     echo "<option value=\"{$i}\" {$selected}>{$i}もん</option>";
                 }
                 ?>
             </select>
-            
             <input type="hidden" name="from_page" value="index.php">
         </form>
         <br>
-        
-        ⭐いま <span id="now" style="color:#ff9800; font-weight:bold; font-size: 1.5rem;"><?php echo $today_count; ?></span> / <?php echo $current_target; ?> もんといたよ！
+        ⭐いま <span id="now" style="color:#ff9800; font-weight:bold; font-size: 1.5rem;">
+            <?php echo $today_count; ?>
+        </span> / <?php echo $current_target; ?> もんといたよ！
     </div>
 
     <button class="btn study-btn" onclick="location.href='subject_select.php'">✏️べんきょうする</button>
     <button class="btn record-btn" onclick="location.href='history_select.php'">📝きろくをみる</button>
+
 </body>
 </html>
