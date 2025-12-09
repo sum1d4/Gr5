@@ -2,12 +2,39 @@
 session_start();
 require_once "db_config.php"; // DB接続設定
 
-// ★★★ 1. ログインチェック ★★★
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ★ 1. ログインチェック
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
 if (!isset($_SESSION["user_id"])) {
     header("Location: Rogin.php"); // Rogin.php へリダイレクト
     exit;
 }
 $user_id = $_SESSION["user_id"];
+
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ★ 2. URLパラメータのバリデーション（安全チェック）
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+// 許可する値だけを定義
+$allowed_grades = ['1', '2']; 
+$allowed_subjects = ['yomi', 'kaki'];
+
+// grade が不正なら subject_select に戻す
+if (!isset($_GET['grade']) || !in_array($_GET['grade'], $allowed_grades, true)) {
+    header("Location: subject_select.php?error=invalid_grade");
+    exit;
+}
+
+// subject が不正なら subject_select に戻す
+if (!isset($_GET['subject']) || !in_array($_GET['subject'], $allowed_subjects, true)) {
+    header("Location: subject_select.php?error=invalid_subject");
+    exit;
+}
+
+// ここまで来たら安全な値
+$selected_grade = $_GET['grade'];
+$selected_subject = $_GET['subject'];
+
 
 // クエリパラメータから学年と教科を受け取る
 $selected_grade = '';
