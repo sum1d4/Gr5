@@ -113,9 +113,6 @@ if ($_SESSION["current_q2"] > 10) {
     $stmt_up->bindValue(":sid", $session_id, PDO::PARAM_INT);
     $stmt_up->execute();
 
-    // セッション破棄（リセット）
-    session_destroy();
-
     header("Location: final_result.php?total=$total&correct=$correct");
     exit;
 }

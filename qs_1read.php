@@ -2,103 +2,88 @@
 session_start();
 require_once "db_config.php";
 
-// --------------------------------------------
-// 【ログインチェック】
-// --------------------------------------------
+/* --------------------------------------------
+   0) ログインチェック
+-------------------------------------------- */
 if (!isset($_SESSION["user_id"])) {
     header("Location: Rogin.php");
     exit;
 }
 
-// ===========================================================
-// ★ 1) 初回アクセス時 learning_session を自動作成
-// ===========================================================
+/* --------------------------------------------
+   1) 初回なら学習セッションを作成
+-------------------------------------------- */
 if (!isset($_SESSION["learning_session_id"])) {
-
-    // 出題数は固定（index.php の目標値は学習の目安なので使わない）
-    $total_questions = 10; 
 
     $sql = "INSERT INTO learning_session 
             (user_id, subject, category, total_questions, correct_count, start_time)
-            VALUES (:uid, '1yomi', 'normal', :tq, 0, NOW())";
+            VALUES (:uid, '1yomi', 'normal', 10, 0, NOW())";
 
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(":uid", $_SESSION["user_id"], PDO::PARAM_INT);
-    $stmt->bindValue(":tq", $total_questions, PDO::PARAM_INT);
     $stmt->execute();
 
-    // セッションに保存（以降の問題で使用）
     $_SESSION["learning_session_id"] = $pdo->lastInsertId();
 }
 
-// ===========================================================
-// 2) 10問の進行状況管理（初回初期化）
-// ===========================================================
+/* --------------------------------------------
+   2) 初期化（1問目）
+-------------------------------------------- */
 if (!isset($_SESSION["current_q"])) {
     $_SESSION["current_q"] = 1;
     $_SESSION["correct_count"] = 0;
-    $_SESSION["read_questions"] = []; // 出題済みの問題ID
+    $_SESSION["read_questions"] = [];
 }
 
-// ===========================================================
-// 3) 10問終わったら final_result.php へ
-// ===========================================================
+/* --------------------------------------------
+   3) 10問終わり判定
+-------------------------------------------- */
 if ($_SESSION["current_q"] > 10) {
-    $total = 10;
     $correct = $_SESSION["correct_count"];
-
-    header("Location: final_result.php?total={$total}&correct={$correct}");
+    header("Location: final_result.php?total=10&correct={$correct}");
     exit;
 }
 
-// ===========================================================
-// 4) 未出題の問題をランダム取得
-// ===========================================================
-$used_list = $_SESSION["read_questions"];
-$placeholders = implode(",", array_fill(0, count($used_list), "?"));
+/* --------------------------------------------
+   4) 未使用の読み問題をランダム取得
+-------------------------------------------- */
+$used = $_SESSION["read_questions"];
+$placeholders = implode(",", array_fill(0, count($used), "?"));
 
 $sql = "
     SELECT question_id, question_text 
     FROM kanji
     WHERE question_id LIKE 'KJ0%' 
-    AND question_id LIKE '%R'
+      AND question_id LIKE '%R'
 ";
 
-if (!empty($used_list)) {
-    $sql .= " AND question_id NOT IN ($placeholders) ";
+if (!empty($used)) {
+    $sql .= " AND question_id NOT IN ($placeholders)";
 }
 
 $sql .= " ORDER BY RAND() LIMIT 1";
 
 $stmt = $pdo->prepare($sql);
-$stmt->execute($used_list);
+$stmt->execute($used);
 
-$question = $stmt->fetch(PDO::FETCH_ASSOC);
-if (!$question) {
-    die("利用可能な問題がありません。");
-}
+$q = $stmt->fetch(PDO::FETCH_ASSOC);
+if (!$q) { die("利用可能な問題がありません。"); }
 
-$question_id    = $question["question_id"];
-$question_kanji = $question["question_text"];
+$question_id    = $q["question_id"];
+$question_kanji = $q["question_text"];
 
-// 出題済みに追加
 $_SESSION["read_questions"][] = $question_id;
 
-// ===========================================================
-// 5) 読みデータ（1件だけ取得 → 文字数を出すため）
-// ===========================================================
-$sql2 = "SELECT reading_answer FROM kanji_reading WHERE question_id = :qid LIMIT 1";
+/* --------------------------------------------
+   5) 正解読み取得
+-------------------------------------------- */
+$sql2 = "SELECT reading_answer FROM kanji_reading WHERE question_id = :qid";
 $stmt2 = $pdo->prepare($sql2);
 $stmt2->bindValue(":qid", $question_id);
 $stmt2->execute();
-$row = $stmt2->fetch(PDO::FETCH_ASSOC);
+$correct_answers = $stmt2->fetchAll(PDO::FETCH_COLUMN);
 
-if (!$row) {
-    die("読みデータがありません");
-}
-
-$correct_answer = $row["reading_answer"];
-$correct_length = mb_strlen($correct_answer, "UTF-8");
+$correct_length = mb_strlen($correct_answers[0], "UTF-8");
 ?>
 <!DOCTYPE html>
 <html lang="ja">

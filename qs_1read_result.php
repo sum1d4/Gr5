@@ -1,7 +1,4 @@
 <?php
-// ==========================================
-// qs_1read_result.php（10問進行・正誤判定・DB保存対応）
-// ==========================================
 session_start();
 require_once "db_config.php";
 
@@ -111,9 +108,6 @@ if ($_SESSION["current_q"] > 10) {
     $stmt_up->bindValue(":cc", $correct, PDO::PARAM_INT);
     $stmt_up->bindValue(":sid", $session_id, PDO::PARAM_INT);
     $stmt_up->execute();
-
-    // セッション破棄（リセット）
-    session_destroy();
 
     header("Location: final_result.php?total=$total&correct=$correct");
     exit;

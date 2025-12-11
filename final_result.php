@@ -41,6 +41,10 @@ unset($_SESSION["yomi_used_questions"]);
 unset($_SESSION["yomi_correct_count"]);
 unset($_SESSION["yomi_correct_answer"]);
 
+unset($_SESSION["current_q"]);
+unset($_SESSION["correct_count"]);
+unset($_SESSION["read_questions"]);
+
 unset($_SESSION["learning_session_id"]); // ← 最後に消す
 
 ?>
