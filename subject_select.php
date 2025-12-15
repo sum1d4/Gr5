@@ -242,7 +242,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     </form>
 
-    <a href="home.php" class="home-link">🏠</a>
+    <a href="index.php" class="home-link">🏠</a>
 
 </div>
 
