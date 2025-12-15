@@ -170,94 +170,90 @@ $_SESSION["unanswered_2yomi_correct_answer"]=$correct_answer;
 <title>2年生 漢字読み問題（未出題モード）</title>
 <style>
 /* --- CSS --- */
-html,body{
-    margin:0;
-    padding:0;
-    height:100%;
-    background-color:#fff;
-    font-family:"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #fff;
+    font-family: "Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.container {
+    width: 100%;
+    max-width: 390px;
+    height: 844px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.appbar {
+    width: 100%;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    background-color: #fff;
+}
+.back-icon {
+    font-size: 28px;
+    color: #007aff;
+    text-decoration: none;
+}
+.board {
+    margin-top: 100px;
+    width: 220px;
+    height: 160px;
+    background-color: #2e7d32;
+    border-radius: 10px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.kanji {
+    font-size: 60px;
+    color: white;
+    font-weight: bold;
+}
+.yellow-boxes {
+    position: absolute;
+    right: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.yellow-box {
+    width: 24px;
+    height: 24px;
+    border: 2px solid yellow;
 }
 
-.container{
-    width:100%;
-    max-width:390px;
-    height:844px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
+.input-container {
+    margin-top: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.appbar{
-    width:100%;
-    height:48px;
-    display:flex;
-    align-items:center;
-    padding-left:12px;
-    background-color:#fff;
+input[type="text"] {
+    width: 220px;
+    padding: 10px;
+    font-size: 20px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 10px;
 }
 
-.back-icon{
-    font-size:28px;
-    color:#007aff;
-    text-decoration:none;
-}
-
-.board{
-    margin-top:100px;
-    width:220px;
-    height:160px;
-    background-color:#2e7d32;
-    border-radius:10px;
-    position:relative;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-
-.kanji{
-    font-size:60px;
-    color:white;
-    font-weight:bold;
-}
-
-.yellow-boxes{
-    position:absolute;
-    right:14px;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-}
-
-.yellow-box{
-    width:24px;
-    height:24px;
-    border:2px solid yellow;
-}
-
-.input-container{
-    margin-top:60px;
-}
-
-input[type="text"]{
-    width:220px;
-    padding:10px;
-    font-size:20px;
-    text-align:center;
-    border:1px solid #ccc;
-    border-radius:10px;
-}
-
-.check-button{
-    margin-top:25px;
-    padding:14px 50px;
-    font-size:20px;
-    background-color:white;
-    border:1.5px solid #555;
-    border-radius:8px;
-    cursor:pointer;
+.check-button {
+    margin-top: 25px;
+    padding: 14px 50px;
+    font-size: 20px;
+    background-color: white;
+    border: 1.5px solid #555;
+    border-radius: 8px;
+    cursor: pointer;
 }
 </style>
 </head>
@@ -290,6 +286,16 @@ input[type="text"]{
 
         <button type="submit" class="check-button">こたえあわせ</button>
     </form>
+
+    <script>
+    window.onload = function() {
+        const inputBox = document.querySelector('input[name="answer"]');
+        if (inputBox) {
+            inputBox.focus();
+        }
+    };
+    </script>
+    
 </div>
 
 </body>

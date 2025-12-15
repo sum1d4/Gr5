@@ -227,6 +227,18 @@ html, body {
         <a href="<?= $quit_button_link ?>" class="action-button menu-button">やめる</a>
     </div>
 
+    <script>
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();  // 変な動作を防ぐ
+            const nextBtn = document.querySelector('.next-button');
+            if (nextBtn) {
+                nextBtn.click();
+            }
+        }
+    });
+    </script>
+    
 </div>
 
 </body>

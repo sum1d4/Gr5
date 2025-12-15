@@ -210,6 +210,16 @@ input[type="text"] {
 
         <button type="submit" class="check-button">こたえあわせ</button>
     </form>
+
+    <script>
+    window.onload = function() {
+        const inputBox = document.querySelector('input[name="answer"]');
+        if (inputBox) {
+            inputBox.focus();
+        }
+    };
+    </script>
+
 </div>
 
 </body>

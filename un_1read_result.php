@@ -265,3 +265,15 @@ html, body {
             やめる
         </a>
     </div>
+
+    <script>
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();  // 変な動作を防ぐ
+            const nextBtn = document.querySelector('.next-button');
+            if (nextBtn) {
+                nextBtn.click();
+            }
+        }
+    });
+    </script>

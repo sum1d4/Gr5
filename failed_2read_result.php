@@ -200,6 +200,18 @@ html, body {
         <a href="<?= $menu_link ?>" class="action-button menu-button">メニューにもどる</a>
     </div>
 
+    <script>
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();  // 変な動作を防ぐ
+            const nextBtn = document.querySelector('.next-button');
+            if (nextBtn) {
+                nextBtn.click();
+            }
+        }
+    });
+    </script>
+    
 </div>
 
 </body>

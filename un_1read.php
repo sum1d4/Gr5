@@ -74,9 +74,10 @@ $mastered_list = $stmt_mastered->fetchAll(PDO::FETCH_COLUMN);
 // 4b) 出題から除外するリストを結合 (★ 新しいセッション変数名を使用)
 // リストの値を文字列型に強制変換し、確実に空要素を除外
 $exclude_list = array_unique(array_merge($mastered_list, $_SESSION["read1_used_questions"]));
+
 // $exclude_list の中から偽の要素（空文字列、0など）を除外
 $exclude_list = array_filter(array_map('strval', $exclude_list));
-
+$exclude_list = array_values($exclude_list); 
 
 // 4c) 未出題の問題をランダム取得
 $sql_base = "
@@ -152,12 +153,11 @@ html, body {
     padding: 0;
     height: 100%;
     background-color: #fff;
-    font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    font-family: "Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
-
 .container {
     width: 100%;
     max-width: 390px;
@@ -166,7 +166,6 @@ html, body {
     flex-direction: column;
     align-items: center;
 }
-
 .appbar {
     width: 100%;
     height: 48px;
@@ -175,13 +174,11 @@ html, body {
     padding-left: 12px;
     background-color: #fff;
 }
-
 .back-icon {
     font-size: 28px;
     color: #007aff;
     text-decoration: none;
 }
-
 .board {
     margin-top: 100px;
     width: 220px;
@@ -193,13 +190,11 @@ html, body {
     justify-content: center;
     align-items: center;
 }
-
 .kanji {
     font-size: 60px;
     color: white;
     font-weight: bold;
 }
-
 .yellow-boxes {
     position: absolute;
     right: 14px;
@@ -207,7 +202,6 @@ html, body {
     flex-direction: column;
     gap: 12px;
 }
-
 .yellow-box {
     width: 24px;
     height: 24px;
@@ -216,6 +210,9 @@ html, body {
 
 .input-container {
     margin-top: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 input[type="text"] {
@@ -267,6 +264,16 @@ input[type="text"] {
 
         <button type="submit" class="check-button">こたえあわせ</button>
     </form>
+
+    <script>
+    window.onload = function() {
+        const inputBox = document.querySelector('input[name="answer"]');
+        if (inputBox) {
+            inputBox.focus();
+        }
+    };
+    </script>
+
 </div>
 
 </body>
