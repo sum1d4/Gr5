@@ -6,7 +6,7 @@ require_once 'db_config.php';
 
 // 🚨【修正箇所】学年と教科を固定値に設定
 $selected_grade = 2;
-$selected_subject = 'kaki';
+$selected_subject = 'yomi';
 
 // ----------------------------------------------------
 // 🏆 データベースからハイスコアを取得する処理
@@ -56,7 +56,7 @@ $back_url = "mode_select.php?grade={$selected_grade}&subject={$selected_subject}
 $home_url = "index.php"; 
 
 // スタートボタンの遷移先
-$start_page = 'score_2kaki.php'; 
+$start_page = 'score_2read.php'; 
 
 // 遷移先のページに grade と subject をクエリパラメータで渡す
 $query_params = "?grade={$selected_grade}&subject={$selected_subject}";
