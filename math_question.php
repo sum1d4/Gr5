@@ -238,4 +238,3 @@ $back_page = 'subject_select.php';
     </script>
 
 </body>
-</html>
