@@ -74,7 +74,7 @@
     <div class="title">Learn+</div>
     <div class="button-box">
     <button class="btn" onclick="location.href='Rogin.php'">ログイン</button>
-    <button class="btn" onclick="location.href='home.php'">ゲスト</button>
+    <button class="btn" onclick="location.href='index_guest.php'">ゲスト</button>
     </div>
     <div class="terms">
         <a href="#" style="text-decoration:none; color:#333">利用規約</a></div>
